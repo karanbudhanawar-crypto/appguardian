@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>APP_GUARDIAN v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0f0a; --bg2:#0d130d; --bg3:#111811; --card:#131b13; --card2:#161f16;
+  --green:#00ff41; --green2:#00cc33; --green3:#009922;
+  --green-dim:rgba(0,255,65,.12); --green-glow:rgba(0,255,65,.35);
+  --red:#ff3b3b; --red-dim:rgba(255,59,59,.15);
+  --amber:#ffaa00; --amber-dim:rgba(255,170,0,.15);
+  --blue:#4fc3f7; --purple:#b57bee;
+  --text:#c8e6c9; --text2:#7a9e7a; --text3:#4a6a4a;
+  --border:rgba(0,255,65,.15); --border2:rgba(0,255,65,.08);
+  --scan-bg:#080d10; --scan-card:#0d1520; --scan-border:rgba(79,195,247,.2);
+  --font-mono:'Share Tech Mono',monospace;
+  --font-head:'Orbitron',sans-serif;
+  --font-body:'Rajdhani',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden}
+
+/* scanlines */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:998;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px);
+  animation:scanlines 10s linear infinite}
+@keyframes scanlines{0%{background-position:0 0}100%{background-position:0 40px}}
+
+/* grid bg */
+.grid-bg{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,255,65,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,65,.025) 1px,transparent 1px);
+  background-size:40px 40px}
+
+/* ── PAGE SYSTEM ── */
+#page-home,#page-scan{position:relative;z-index:1}
+#page-scan{display:none}
+
+/* ══════════ NAV ══════════ */
+nav{display:flex;justify-content:space-between;align-items:center;
+  padding:14px 40px;border-bottom:1px solid var(--border2);
+  background:rgba(10,15,10,.9);backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:10px;font-family:var(--font-mono);color:var(--green);font-size:14px;cursor:pointer}
+.nav-logo svg{flex-shrink:0}
+.nav-ver{color:var(--text3);font-size:11px}
+.nav-right{display:flex;align-items:center;gap:22px}
+.nav-link{font-family:var(--font-mono);font-size:13px;color:var(--text2);text-decoration:none;transition:color .2s}
+.nav-link:hover{color:var(--green)}
+.btn-login{border:1px solid var(--green);color:var(--green);padding:6px 16px;background:transparent;
+  cursor:pointer;font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;gap:6px;transition:all .2s}
+.btn-login:hover{background:var(--green-dim)}
+
+/* ══════════ HERO ══════════ */
+.hero{text-align:center;padding:80px 40px 60px;position:relative}
+.hero-title{font-family:var(--font-head);font-size:clamp(55px,10vw,118px);font-weight:900;
+  color:var(--green);letter-spacing:.05em;line-height:1;display:inline-block;
+  text-shadow:0 0 30px var(--green-glow),0 0 80px rgba(0,255,65,.2);
+  animation:glitch 6s infinite}
+@keyframes glitch{
+  0%,88%,100%{transform:translate(0);text-shadow:0 0 30px var(--green-glow),0 0 80px rgba(0,255,65,.2)}
+  89%{transform:translate(-3px,0);text-shadow:2px 0 28px #ff3b3b,0 0 80px rgba(0,255,65,.2)}
+  90%{transform:translate(3px,0);text-shadow:-2px 0 28px #4fc3f7,0 0 80px rgba(0,255,65,.2)}
+  91%{transform:translate(0)}
+}
+.hero-tag{font-family:var(--font-mono);color:var(--text2);font-size:18px;margin-top:20px}
+.hero-tag::before{content:'> ';color:var(--green)}
+
+/* ══════════ SEARCH ══════════ */
+.search-wrap{max-width:740px;margin:40px auto 12px;padding:0 20px}
+.search-box{display:flex;align-items:center;border:1px solid var(--green);background:rgba(0,255,65,.035);transition:all .3s}
+.search-box:focus-within{background:rgba(0,255,65,.07);box-shadow:0 0 22px rgba(0,255,65,.2),inset 0 0 10px rgba(0,255,65,.04)}
+.search-prompt{font-family:var(--font-mono);color:var(--green);padding:0 14px;font-size:18px;user-select:none}
+.search-input{flex:1;background:transparent;border:none;outline:none;
+  font-family:var(--font-mono);color:var(--text);font-size:16px;
+  padding:18px 0;caret-color:var(--green)}
+.search-input::placeholder{color:var(--text3)}
+.search-btn{background:transparent;border:none;border-left:1px solid var(--border);
+  color:var(--green);font-family:var(--font-mono);font-size:13px;
+  padding:18px 22px;cursor:pointer;display:flex;align-items:center;gap:8px;
+  white-space:nowrap;transition:all .2s}
+.search-btn:hover{background:var(--green-dim)}
+.search-hints{font-family:var(--font-mono);font-size:12px;color:var(--text3);margin-top:10px;padding-left:2px}
+.hint-link{color:var(--green3);cursor:pointer;transition:color .2s}
+.hint-link:hover{color:var(--green)}
+
+/* ── SEARCH RESULTS DROPDOWN ── */
+.results-wrap{max-width:740px;margin:0 auto;padding:0 20px;display:none}
+.results-wrap.open{display:block}
+.results-inner{border:1px solid var(--border);border-top:none;background:var(--card)}
+.res-item{display:flex;align-items:center;gap:14px;padding:13px 18px;
+  cursor:pointer;border-bottom:1px solid var(--border2);transition:background .18s}
+.res-item:last-child{border-bottom:none}
+.res-item:hover{background:var(--card2)}
+.res-letter{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-head);font-size:13px;font-weight:700;flex-shrink:0;
+  background:var(--bg3);border:1px solid var(--border)}
+.res-img{width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)}
+.res-name{font-family:var(--font-mono);font-size:13px;color:var(--text)}
+.res-dev{font-size:12px;color:var(--text3);margin-top:2px}
+.res-score{margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--green3);flex-shrink:0}
+.res-loading{font-family:var(--font-mono);font-size:13px;color:var(--text3);padding:18px;text-align:center}
+.res-error{font-family:var(--font-mono);font-size:12px;color:var(--red);padding:14px 18px}
+
+/* ══════════ FEATURE CARDS ══════════ */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin:50px 40px 0;background:var(--border2)}
+.feat-card{background:var(--card);padding:32px 28px;transition:background .25s}
+.feat-card:hover{background:var(--card2)}
+.feat-icon{width:28px;height:28px;margin-bottom:18px}
+.feat-title{font-family:var(--font-mono);color:var(--text);font-size:15px;margin-bottom:10px}
+.feat-desc{color:var(--text3);font-size:15px;line-height:1.6}
+
+/* ══════════ SAMPLES ══════════ */
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin:44px 40px 14px}
+.sec-title{font-family:var(--font-mono);color:var(--green);font-size:15px}
+.browse-all{font-family:var(--font-mono);font-size:13px;color:var(--text2);cursor:pointer;transition:color .2s}
+.browse-all:hover{color:var(--green)}
+.samples{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin:0 40px 60px;background:var(--border2)}
+.sample-card{background:var(--card);padding:18px 22px;display:flex;align-items:center;gap:14px;
+  cursor:pointer;transition:background .2s}
+.sample-card:hover{background:var(--card2)}
+.s-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-head);font-size:16px;font-weight:700;flex-shrink:0;border:1px solid var(--border)}
+.s-name{font-family:var(--font-mono);font-size:14px;color:var(--text)}
+.s-dev{font-size:13px;color:var(--text3);margin-top:3px}
+
+/* ══════════════════════════════════
+   SCAN PAGE
+══════════════════════════════════ */
+#page-scan{background:var(--scan-bg);min-height:100vh}
+.scan-nav{display:flex;justify-content:space-between;align-items:center;
+  padding:14px 40px;border-bottom:1px solid rgba(79,195,247,.1);
+  background:rgba(8,13,16,.92);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.scan-logo{font-family:var(--font-mono);color:var(--green);font-size:14px;cursor:pointer}
+.back-btn{font-family:var(--font-mono);font-size:13px;color:var(--text2);background:none;
+  border:1px solid rgba(255,255,255,.1);padding:6px 14px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;transition:all .2s}
+.back-btn:hover{border-color:var(--green);color:var(--green)}
+
+/* app header bar */
+.app-hdr{display:flex;align-items:center;gap:20px;padding:26px 40px 22px;
+  border-bottom:1px solid rgba(79,195,247,.1);background:rgba(0,0,0,.25)}
+.app-icon-box{width:64px;height:64px;border-radius:14px;background:var(--scan-card);
+  border:2px solid rgba(79,195,247,.25);display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-head);font-size:22px;font-weight:700;flex-shrink:0;overflow:hidden}
+.app-icon-box img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+.app-hdr-info h1{font-family:var(--font-head);font-size:21px;color:#fff;font-weight:700}
+.app-hdr-info .dev-sub{color:rgba(255,255,255,.45);font-size:14px;margin-top:4px}
+.badge{display:inline-flex;align-items:center;gap:5px;
+  background:rgba(0,255,100,.1);border:1px solid rgba(0,255,100,.35);
+  color:#00ff64;font-size:11px;font-family:var(--font-mono);padding:3px 10px;margin-top:8px}
+.badge.unsafe{background:rgba(255,59,59,.1);border-color:rgba(255,59,59,.35);color:var(--red)}
+.status-dot{font-size:12px;color:rgba(255,255,255,.3);margin-left:10px;font-family:var(--font-mono)}
+.store-btn{margin-left:auto;background:#1976d2;color:#fff;border:none;padding:10px 20px;
+  border-radius:6px;font-family:var(--font-body);font-weight:600;font-size:14px;
+  cursor:pointer;display:flex;align-items:center;gap:6px;text-decoration:none;
+  transition:background .2s;flex-shrink:0}
+.store-btn:hover{background:#1565c0}
+
+/* ── SCAN BODY ── */
+.scan-body{padding:26px 40px 60px;max-width:1400px;margin:0 auto}
+
+/* top grid */
+.top-grid{display:grid;grid-template-columns:210px 1fr 1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+
+/* score ring card */
+.score-card{background:var(--scan-card);border:1px solid rgba(79,195,247,.1);
+  border-radius:12px;padding:26px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-wrap{position:relative;width:120px;height:120px;margin-bottom:10px}
+.ring-svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.05);stroke-width:8}
+.ring-fill{fill:none;stroke:#00e676;stroke-width:8;stroke-linecap:round;
+  stroke-dasharray:0 314;transition:stroke-dasharray 1.1s ease}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-num{font-family:var(--font-head);font-size:36px;font-weight:700;color:#fff;line-height:1}
+.ring-sm{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px}
+.ring-grade{font-family:var(--font-mono);font-size:12px;color:#00e676;margin-top:2px}
+.score-pct{font-size:12px;color:rgba(255,255,255,.35);text-align:center;margin-top:4px}
+.score-pct span{color:var(--blue)}
+
+/* metric cards */
+.metric-card{background:var(--scan-card);border:1px solid rgba(79,195,247,.1);border-radius:12px;padding:20px 22px}
+.mc-hdr{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.mc-icon{width:20px;height:20px;opacity:.8}
+.mc-title{font-size:14px;color:rgba(255,255,255,.7);font-weight:600}
+.mc-val{font-family:var(--font-head);font-size:26px;font-weight:700;margin-bottom:4px}
+.mc-lbl{font-size:12px;margin-bottom:10px}
+.bar-bg{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;width:0;transition:width 1.1s ease}
+
+.c-red{color:#ef5350} .c-green{color:#00e676} .c-amber{color:#ffaa00} .c-blue{color:var(--blue)}
+.b-red{background:#ef5350} .b-green{background:#00e676} .b-amber{background:#ffaa00}
+
+/* stats row */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:14px}
+.stat-card{background:var(--scan-card);border:1px solid rgba(79,195,247,.1);border-radius:12px;padding:18px 20px}
+.stat-lbl{font-size:12px;color:rgba(255,255,255,.38);margin-bottom:8px}
+.stat-val{font-family:var(--font-head);font-size:20px;font-weight:700;color:#fff}
+.stat-val.xl{font-size:28px}
+.stat-val.risk-low{color:#00e676;font-size:28px}
+.stat-val.risk-med{color:#ffaa00;font-size:28px}
+.stat-val.risk-high{color:#ef5350;font-size:28px}
+.stat-sub{font-size:12px;color:rgba(255,255,255,.3);margin-top:4px}
+.mini-chart{display:flex;align-items:flex-end;gap:2px;margin-top:10px;height:30px}
+.mini-bar{flex:1;border-radius:2px 2px 0 0;background:rgba(181,123,238,.45)}
+
+/* 360 breakdown */
+.breakdown{margin-top:4px}
+.bd-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.bd-title{font-family:var(--font-head);font-size:15px;color:#fff;font-weight:600}
+.view-full{font-family:var(--font-mono);font-size:12px;color:var(--purple);cursor:pointer}
+.dims{display:flex;align-items:center;justify-content:space-between}
+.dim{display:flex;flex-direction:column;align-items:center;gap:10px;flex:1}
+.dim-circle{width:70px;height:70px;border-radius:50%;border:2px solid rgba(181,123,238,.45);
+  display:flex;align-items:center;justify-content:center;background:rgba(181,123,238,.07)}
+.dim-circle svg{width:26px;height:26px}
+.dim-line{flex:1;height:1px;background:rgba(181,123,238,.22)}
+.dim-name{font-size:12px;color:rgba(255,255,255,.45);text-align:center;line-height:1.4}
+.dim-done{font-size:11px;color:#00e676;font-family:var(--font-mono)}
+.pager{text-align:center;font-size:12px;color:rgba(255,255,255,.25);margin-top:18px;font-family:var(--font-mono)}
+
+/* ══════════ LOADING OVERLAY ══════════ */
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+#overlay.show{display:flex}
+.spin{width:56px;height:56px;border:2px solid var(--border);
+  border-top:2px solid var(--green);border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ov-msg{font-family:var(--font-mono);color:var(--green);font-size:14px}
+.ov-step{font-family:var(--font-mono);font-size:12px;color:var(--text3)}
+
+/* backend status pill */
+.api-status{position:fixed;bottom:16px;right:16px;z-index:200;
+  font-family:var(--font-mono);font-size:11px;padding:5px 12px;border-radius:2px;
+  display:flex;align-items:center;gap:6px;pointer-events:none}
+.api-status.ok{background:rgba(0,255,65,.08);border:1px solid rgba(0,255,65,.25);color:var(--green)}
+.api-status.err{background:rgba(255,59,59,.08);border:1px solid rgba(255,59,59,.25);color:var(--red)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+@media(max-width:1100px){
+  .top-grid{grid-template-columns:180px 1fr 1fr;grid-template-rows:auto auto}
+  .top-grid .metric-card:nth-child(4),.top-grid .metric-card:nth-child(5){grid-column:span 1}
+}
+@media(max-width:750px){
+  .features,.samples{grid-template-columns:1fr}
+  nav,#page-home .sec-hdr,.samples,.features{padding-left:16px;padding-right:16px}
+  .scan-body,.scan-nav,.app-hdr{padding-left:16px;padding-right:16px}
+  .top-grid{grid-template-columns:1fr 1fr}
+  .score-card{grid-column:1/3}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .dims{flex-wrap:wrap;gap:16px}
+  .dim-line{display:none}
+}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- API Status indicator -->
+<div class="api-status" id="api-status">
+  <div class="dot"></div><span id="api-status-text">connecting...</span>
+</div>
+
+<!-- Loading Overlay -->
+<div id="overlay">
+  <div class="spin"></div>
+  <div class="ov-msg" id="ov-msg">Initializing scan...</div>
+  <div class="ov-step" id="ov-step">Connecting to Play Store</div>
+</div>
+
+<!-- ══════════════════════════════════
+     HOME PAGE
+══════════════════════════════════ -->
+<div id="page-home">
+  <nav>
+    <div class="nav-logo" onclick="goHome()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6L12 2z" stroke="#00ff41" stroke-width="1.5" fill="rgba(0,255,65,.08)"/>
+        <circle cx="12" cy="12" r="2.5" fill="#00ff41" opacity=".7"/>
+      </svg>
+      <span>APP_GUARDIAN</span>
+      <span class="nav-ver">v1.0</span>
+    </div>
+    <div class="nav-right">
+      <a class="nav-link" href="#">home</a>
+      <button class="btn-login">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        login
+      </button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-title">GUARDIAN</div>
+    <p class="hero-tag">trust the app. not the rating.</p>
+  </div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="search-prompt">&gt;</span>
+      <input class="search-input" id="q" type="text" placeholder="scan an app — name, developer, or package id" autocomplete="off" spellcheck="false"/>
+      <button class="search-btn" onclick="doSearch()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        scan
+      </button>
+    </div>
+    <p class="search-hints">try:
+      <span class="hint-link" onclick="quickSearch('whatsapp')">whatsapp</span>,
+      <span class="hint-link" onclick="quickSearch('spotify')">spotify</span>,
+      <span class="hint-link" onclick="quickSearch('flash cleaner')">flash cleaner</span>,
+      <span class="hint-link" onclick="quickSearch('qr scanner')">qr scanner</span>
+    </p>
+  </div>
+
+  <!-- Results -->
+  <div class="results-wrap" id="results-wrap">
+    <div class="results-inner" id="results-inner"></div>
+  </div>
+
+  <!-- Feature cards -->
+  <div class="features">
+    <div class="feat-card">
+      <svg class="feat-icon" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#00ff41" stroke-width="1.5"/><circle cx="12" cy="12" r="3" stroke="#00ff41" stroke-width="1.5"/></svg>
+      <div class="feat-title">Fake review forensics</div>
+      <p class="feat-desc">Spot review bursts, duplicate phrasing and rating/sentiment mismatch.</p>
+    </div>
+    <div class="feat-card">
+      <svg class="feat-icon" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6L12 2z" stroke="#00ff41" stroke-width="1.5"/></svg>
+      <div class="feat-title">Permission risk</div>
+      <p class="feat-desc">Plain-English breakdown of every dangerous permission an app asks for.</p>
+    </div>
+    <div class="feat-card">
+      <svg class="feat-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#00ff41" stroke-width="1.5"/><path d="M9 9h6M9 12h6M9 15h4" stroke="#00ff41" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div class="feat-title">Developer trust</div>
+      <p class="feat-desc">Score the publisher based on their full history on the store.</p>
+    </div>
+  </div>
+
+  <!-- Sample scans -->
+  <div class="sec-hdr">
+    <span class="sec-title">&gt; sample_scans/</span>
+    <span class="browse-all">browse all &rsaquo;</span>
+  </div>
+  <div class="samples" id="samples-grid">
+    <div class="sample-card" onclick="scanApp('com.google.android.calculator','Calculator','Google LLC','=','#1565c0')">
+      <div class="s-icon" style="background:#1565c0;color:#fff">=</div>
+      <div><div class="s-name">Calculator</div><div class="s-dev">Google LLC</div></div>
+    </div>
+    <div class="sample-card" onclick="scanApp('com.whatsapp','WhatsApp Messenger','WhatsApp LLC','W','#25d366')">
+      <div class="s-icon" style="background:#25d366;color:#fff">W</div>
+      <div><div class="s-name">WhatsApp Messenger</div><div class="s-dev">WhatsApp LLC</div></div>
+    </div>
+    <div class="sample-card" onclick="scanApp('com.spotify.music','Spotify: Music and Podcasts','Spotify AB','♪','#1db954')">
+      <div class="s-icon" style="background:#1db954;color:#000">♪</div>
+      <div><div class="s-name">Spotify: Music and Podcasts</div><div class="s-dev">Spotify AB</div></div>
+    </div>
+    <div class="sample-card" onclick="scanApp('com.bfs.flashcleanerpro','Flash Cleaner Pro · Super Boost','BrightCleanLabs','F','#ff6f00')">
+      <div class="s-icon" style="background:#ff6f00;color:#fff">F</div>
+      <div><div class="s-name">Flash Cleaner Pro · Super Boost</div><div class="s-dev">BrightCleanLabs</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCAN RESULTS PAGE
+══════════════════════════════════ -->
+<div id="page-scan">
+  <nav class="scan-nav">
+    <span class="scan-logo" onclick="goHome()">⬡ APP_GUARDIAN v1.0</span>
+    <button class="back-btn" onclick="goHome()">← back</button>
+  </nav>
+
+  <!-- App Header -->
+  <div class="app-hdr">
+    <div class="app-icon-box" id="s-icon-box">W</div>
+    <div class="app-hdr-info">
+      <h1 id="s-title">—</h1>
+      <div class="dev-sub" id="s-dev">—</div>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:6px">
+        <span class="badge" id="s-badge">✓ Safe to Use</span>
+        <span class="status-dot">● Analysis Completed Just now</span>
+      </div>
+    </div>
+    <a class="store-btn" id="s-store-link" href="#" target="_blank" rel="noopener">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Play Store
+    </a>
+  </div>
+
+  <div class="scan-body">
+    <!-- Top metric grid -->
+    <div class="top-grid">
+
+      <!-- Safety Score Ring -->
+      <div class="score-card">
+        <div class="ring-wrap">
+          <svg class="ring-svg" viewBox="0 0 120 120" width="120" height="120">
+            <circle class="ring-bg" cx="60" cy="60" r="50"/>
+            <circle class="ring-fill" id="ring-fill" cx="60" cy="60" r="50"/>
+          </svg>
+          <div class="ring-center">
+            <span class="ring-num" id="r-score">—</span>
+            <span class="ring-sm">Safety Score</span>
+            <span class="ring-grade" id="r-grade">—</span>
+          </div>
+        </div>
+        <div class="score-pct" id="r-pct">Better than <span>—</span> of apps</div>
+      </div>
+
+      <!-- Fake Review Risk -->
+      <div class="metric-card">
+        <div class="mc-hdr">
+          <svg class="mc-icon" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#ef5350" stroke-width="1.5"/></svg>
+          <span class="mc-title">Fake Review Risk</span>
+        </div>
+        <div class="mc-val c-red" id="m-fake-val">—</div>
+        <div class="mc-lbl c-red" id="m-fake-lbl">—</div>
+        <div class="bar-bg"><div class="bar-fill b-red" id="m-fake-bar"></div></div>
+      </div>
+
+      <!-- Permissions Risk -->
+      <div class="metric-card">
+        <div class="mc-hdr">
+          <svg class="mc-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#00e676" stroke-width="1.5"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="#00e676" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="mc-title">Permissions Risk</span>
+        </div>
+        <div class="mc-val c-green" id="m-perm-val">—</div>
+        <div class="mc-lbl c-green" id="m-perm-lbl">—</div>
+        <div class="bar-bg"><div class="bar-fill b-green" id="m-perm-bar"></div></div>
+      </div>
+
+      <!-- Developer Trust -->
+      <div class="metric-card">
+        <div class="mc-hdr">
+          <svg class="mc-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#ef5350" stroke-width="1.5"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#ef5350" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="mc-title">Developer Trust</span>
+        </div>
+        <div class="mc-val c-red" id="m-dev-val">—</div>
+        <div class="mc-lbl c-red" id="m-dev-lbl">—</div>
+        <div class="bar-bg"><div class="bar-fill b-red" id="m-dev-bar"></div></div>
+      </div>
+
+      <!-- Malware -->
+      <div class="metric-card">
+        <div class="mc-hdr">
+          <svg class="mc-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#00e676" stroke-width="1.5"/><path d="M8 12l3 3 5-5" stroke="#00e676" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="mc-title">Malware / Virus</span>
+        </div>
+        <div class="mc-val c-green" id="m-mal-val">—</div>
+        <div class="mc-lbl c-green" id="m-mal-lbl">—</div>
+        <div class="bar-bg"><div class="bar-fill b-green" id="m-mal-bar"></div></div>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-lbl">Sentiment Overview</div>
+        <div class="stat-val" id="st-sentiment" style="color:#00e676">—</div>
+        <div class="stat-sub">Positive</div>
+        <div class="bar-bg" style="margin-top:10px"><div class="bar-fill b-green" id="st-sentiment-bar" style="height:4px"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Reviews Analyzed</div>
+        <div class="stat-val xl" id="st-reviews">—</div>
+        <div class="stat-sub">Across all regions</div>
+        <div class="mini-chart">
+          <div class="mini-bar" style="height:35%"></div><div class="mini-bar" style="height:50%"></div>
+          <div class="mini-bar" style="height:65%"></div><div class="mini-bar" style="height:60%"></div>
+          <div class="mini-bar" style="height:78%"></div><div class="mini-bar" style="height:88%"></div>
+          <div class="mini-bar" style="height:82%"></div><div class="mini-bar" style="height:100%"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Risk Level</div>
+        <div class="stat-val risk-low" id="st-risk">—</div>
+        <div class="stat-sub">Safe to use</div>
+        <div style="margin-top:8px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6L12 2z" stroke="#00e676" stroke-width="1.5" fill="rgba(0,230,118,.08)"/></svg>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Last Analyzed</div>
+        <div class="stat-val" style="font-family:var(--font-body);font-size:17px" id="st-time">Just now</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">App Version</div>
+        <div class="stat-val" style="font-family:var(--font-mono);font-size:14px" id="st-ver">—</div>
+      </div>
+    </div>
+
+    <!-- 360° Breakdown -->
+    <div class="breakdown">
+      <div class="bd-hdr">
+        <span class="bd-title">360° Analysis Breakdown</span>
+        <span class="view-full">View Full Report 👁</span>
+      </div>
+      <div class="dims">
+        <div class="dim">
+          <div class="dim-circle"><svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#b57bee" stroke-width="1.5"/></svg></div>
+          <div class="dim-name">Review<br>Analysis</div><div class="dim-done">Completed</div>
+        </div>
+        <div class="dim-line"></div>
+        <div class="dim">
+          <div class="dim-circle"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#b57bee" stroke-width="1.5"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="#b57bee" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <div class="dim-name">Permissions<br>Scan</div><div class="dim-done">Completed</div>
+        </div>
+        <div class="dim-line"></div>
+        <div class="dim">
+          <div class="dim-circle"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#b57bee" stroke-width="1.5"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#b57bee" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <div class="dim-name">Developer<br>Check</div><div class="dim-done">Completed</div>
+        </div>
+        <div class="dim-line"></div>
+        <div class="dim">
+          <div class="dim-circle"><svg viewBox="0 0 24 24" fill="none"><path d="M18 20V10M12 20V4M6 20v-6" stroke="#b57bee" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <div class="dim-name">Behavior<br>Analysis</div><div class="dim-done">Completed</div>
+        </div>
+        <div class="dim-line"></div>
+        <div class="dim">
+          <div class="dim-circle"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#b57bee" stroke-width="1.5"/><path d="M8 12l2 2 4-4" stroke="#b57bee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="dim-name">Threat<br>Detection</div><div class="dim-done">Completed</div>
+        </div>
+      </div>
+      <div class="pager">1 of 6</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONFIG  —  change this to your deployed server URL
+// ═══════════════════════════════════════════════════
+// Auto-detect API URL: relative in production, localhost in dev
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000'
+  : '';  // Empty = relative URL (same domain on Render)
+
+// ── Check backend health on load ────────────────────
+async function checkBackend() {
+  const el  = document.getElementById('api-status');
+  const txt = document.getElementById('api-status-text');
+  try {
+    const r = await fetch(`${API}/`, { signal: AbortSignal.timeout(3000) });
+    if (r.ok) {
+      el.className = 'api-status ok';
+      txt.textContent = 'backend connected';
+      return true;
+    }
+  } catch {}
+  el.className = 'api-status err';
+  txt.textContent = 'backend offline — using mock data';
+  return false;
+}
+checkBackend();
+
+// ── Navigation ──────────────────────────────────────
+function goHome() {
+  document.getElementById('page-home').style.display = '';
+  document.getElementById('page-scan').style.display = 'none';
+  closeResults();
+  document.getElementById('q').value = '';
+}
+
+// ── Search ──────────────────────────────────────────
+let debounce;
+document.getElementById('q').addEventListener('input', function() {
+  clearTimeout(debounce);
+  const v = this.value.trim();
+  if (v.length < 2) { closeResults(); return; }
+  debounce = setTimeout(() => liveSearch(v), 320);
+});
+document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+function quickSearch(q) { document.getElementById('q').value = q; liveSearch(q); }
+function doSearch()     { const v = document.getElementById('q').value.trim(); if (v) liveSearch(v); }
+function closeResults() { document.getElementById('results-wrap').classList.remove('open'); }
+
+async function liveSearch(q) {
+  const inner = document.getElementById('results-inner');
+  inner.innerHTML = '<div class="res-loading">> scanning Play Store...</div>';
+  document.getElementById('results-wrap').classList.add('open');
+  try {
+    const r = await fetch(`${API}/search?q=${encodeURIComponent(q)}`, { signal: AbortSignal.timeout(8000) });
+    const d = await r.json();
+    renderResults(d.results || []);
+  } catch {
+    renderResults(mockSearch(q));
+  }
+}
+
+function renderResults(apps) {
+  const inner = document.getElementById('results-inner');
+  if (!apps.length) { inner.innerHTML = '<div class="res-loading">No apps found.</div>'; return; }
+  inner.innerHTML = apps.map(a => {
+    const letter = (a.title || a.appId || '?')[0].toUpperCase();
+    const col    = appColor(a.developer);
+    const img    = a.icon ? `<img class="res-img" src="${a.icon}" alt="" onerror="this.style.display='none'"/>` : '';
+    return `<div class="res-item" onclick="scanApp('${esc(a.appId)}','${esc(a.title)}','${esc(a.developer)}','${letter}','${col}')">
+      ${img || `<div class="res-letter" style="color:${col}">${letter}</div>`}
+      <div>
+        <div class="res-name">${a.title || a.appId}</div>
+        <div class="res-dev">${a.developer || ''} · ${a.genre || ''}</div>
+      </div>
+      <div class="res-score">★ ${(+a.score || 0).toFixed(1)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Scan App ─────────────────────────────────────────
+async function scanApp(appId, title, developer, letter, color) {
+  closeResults();
+  showOverlay();
+
+  const STEPS = [
+    'Connecting to Google Play Store…',
+    'Fetching app metadata…',
+    'Analyzing review patterns…',
+    'Scanning permissions…',
+    'Checking developer reputation…',
+    'Running threat detection…',
+    'Computing safety score…',
+  ];
+  let si = 0;
+  const stInt = setInterval(() => {
+    if (si < STEPS.length) document.getElementById('ov-step').textContent = STEPS[si++];
+  }, 380);
+
+  try {
+    let appData, analysis;
+    try {
+      const r  = await fetch(`${API}/scan/${encodeURIComponent(appId)}`, { signal: AbortSignal.timeout(15000) });
+      const d  = await r.json();
+      if (d.error) throw new Error(d.error);
+      appData  = d.app;
+      analysis = d.analysis;
+    } catch (e) {
+      console.warn('[scan] backend error, using mock:', e.message);
+      const m  = mockScan(appId, title, developer);
+      appData  = m.app;
+      analysis = m.analysis;
+    }
+
+    // minimum visible scan time for UX
+    await sleep(2000);
+    clearInterval(stInt);
+    hideOverlay();
+    renderScan(appData, analysis, letter, color);
+  } catch (e) {
+    clearInterval(stInt);
+    hideOverlay();
+    alert('Scan failed: ' + e.message);
+  }
+}
+
+// ── Render Scan Page ─────────────────────────────────
+function renderScan(app, an, letter, color) {
+  // Icon
+  const iconBox = document.getElementById('s-icon-box');
+  if (app.icon) {
+    iconBox.innerHTML = `<img src="${app.icon}" alt="" onerror="this.parentElement.textContent='${letter}';this.parentElement.style.color='${color}'"/>`;
+  } else {
+    iconBox.textContent = letter;
+    iconBox.style.color = color;
+    iconBox.style.background = color + '22';
+  }
+
+  // Header info
+  setText('s-title', app.title || app.appId);
+  setText('s-dev',   `${app.developer || '—'} · ${app.genre || 'App'}`);
+  document.getElementById('s-store-link').href = app.url || `https://play.google.com/store/apps/details?id=${app.appId}`;
+
+  const badge = document.getElementById('s-badge');
+  badge.textContent = an.safeToUse ? '✓ Safe to Use' : '⚠ Use Caution';
+  badge.className   = 'badge' + (an.safeToUse ? '' : ' unsafe');
+
+  // Score ring
+  const score = an.safetyScore || 0;
+  const circ  = 2 * Math.PI * 50;
+  const grade = an.safetyGrade || gradeOf(score);
+  const ringColor = score >= 65 ? '#00e676' : score >= 50 ? '#ffaa00' : '#ef5350';
+
+  setText('r-score', score);
+  setText('r-grade', grade);
+  document.getElementById('r-grade').style.color = ringColor;
+  document.getElementById('r-pct').innerHTML = `Better than <span>${an.betterThanPct || score}%</span> of apps`;
+  setTimeout(() => {
+    const fill = document.getElementById('ring-fill');
+    fill.setAttribute('stroke-dasharray', `${circ * score / 100} ${circ * (1 - score/100)}`);
+    fill.style.stroke = ringColor;
+  }, 150);
+
+  // Metrics
+  setMetric('fake', an.fakeReviewRisk || 0,   an.fakeReviewLabel,   true);
+  setMetric('perm', an.permissionsRisk || 0,  an.permissionsLabel,  true);
+  setMetric('dev',  an.developerTrust || 0,   an.developerLabel,    false);
+  setMetric('mal',  an.malwareRisk || 0,      an.malwareLabel,      true);
+
+  // Stats
+  setText('st-sentiment', (an.sentimentScore || 0) + '%');
+  setTimeout(() => { document.getElementById('st-sentiment-bar').style.width = (an.sentimentScore || 0) + '%'; }, 200);
+  setText('st-reviews', an.reviewsAnalyzed || '—');
+  const rl = an.riskLevel || 'LOW';
+  const rlEl = document.getElementById('st-risk');
+  rlEl.textContent = rl;
+  rlEl.className   = 'stat-val risk-' + rl.toLowerCase();
+  setText('st-time', an.lastAnalyzed || 'Just now');
+  setText('st-ver',  app.version || '—');
+
+  // Show page
+  document.getElementById('page-home').style.display = 'none';
+  document.getElementById('page-scan').style.display  = 'block';
+  window.scrollTo(0, 0);
+}
+
+function setMetric(key, val, label, higherIsWorse) {
+  // color: high value = red if higherIsWorse, green if not
+  const high = val >= 60, med = val >= 30 && val < 60;
+  let col;
+  if (higherIsWorse)  col = high ? 'red' : med ? 'amber' : 'green';
+  else                col = high ? 'red' : med ? 'amber' : 'green'; // dev trust: high = shown red (matches design)
+
+  const cMap = { red:'#ef5350', amber:'#ffaa00', green:'#00e676' };
+  const bMap = { red:'b-red',   amber:'b-amber',  green:'b-green' };
+  const c = cMap[col], b = bMap[col];
+
+  const vEl = document.getElementById(`m-${key}-val`);
+  const lEl = document.getElementById(`m-${key}-lbl`);
+  const bEl = document.getElementById(`m-${key}-bar`);
+
+  vEl.textContent = val + '%';
+  vEl.style.color  = c;
+  if (lEl) { lEl.textContent = label || ''; lEl.style.color = c; }
+  setTimeout(() => { bEl.style.width = val + '%'; bEl.className = `bar-fill ${b}`; }, 200);
+}
+
+// ── Overlay ──────────────────────────────────────────
+function showOverlay(msg='Scanning app...') {
+  document.getElementById('ov-msg').textContent = msg;
+  document.getElementById('overlay').classList.add('show');
+}
+function hideOverlay() { document.getElementById('overlay').classList.remove('show'); }
+
+// ── Utilities ────────────────────────────────────────
+const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+const sleep   = ms => new Promise(r => setTimeout(r, ms));
+const esc     = s  => (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+const PALETTE = ['#00e676','#4fc3f7','#b57bee','#ffaa00','#ff7043','#26c6da','#f06292'];
+const appColor = dev => { let h=0; for(let c of dev||'') h=(Math.imul(31,h)+c.charCodeAt(0))|0; return PALETTE[Math.abs(h)%PALETTE.length]; };
+const gradeOf  = s  => s>=85?'Excellent':s>=70?'Good':s>=55?'Fair':s>=40?'Poor':'Dangerous';
+
+// ── Mock fallback (when backend is offline) ───────────
+function mockSearch(q) {
+  const db = [
+    {appId:'com.whatsapp',         title:'WhatsApp Messenger',              developer:'WhatsApp LLC',       genre:'Communication', score:4.1, icon:''},
+    {appId:'com.whatsapp.w4b',     title:'WhatsApp Business',               developer:'WhatsApp LLC',       genre:'Business',      score:4.0, icon:''},
+    {appId:'com.spotify.music',    title:'Spotify: Music and Podcasts',     developer:'Spotify AB',         genre:'Music',         score:4.4, icon:''},
+    {appId:'com.google.android.calculator', title:'Calculator',             developer:'Google LLC',         genre:'Tools',         score:4.5, icon:''},
+    {appId:'com.bfs.flashcleanerpro',       title:'Flash Cleaner Pro',      developer:'BrightCleanLabs',    genre:'Tools',         score:3.8, icon:''},
+    {appId:'com.instagram.android',         title:'Instagram',              developer:'Instagram',          genre:'Social',        score:4.1, icon:''},
+    {appId:'com.google.android.apps.maps',  title:'Google Maps',            developer:'Google LLC',         genre:'Maps',          score:4.3, icon:''},
+    {appId:'com.snapchat.android',          title:'Snapchat',               developer:'Snap Inc.',          genre:'Social',        score:4.0, icon:''},
+    {appId:'com.netflix.mediaclient',       title:'Netflix',                developer:'Netflix Inc.',       genre:'Entertainment', score:4.4, icon:''},
+    {appId:'com.adobe.reader',              title:'Adobe Acrobat Reader',   developer:'Adobe',              genre:'Productivity',  score:4.2, icon:''},
+  ];
+  const ql = q.toLowerCase();
+  const hits = db.filter(a => a.title.toLowerCase().includes(ql) || a.developer.toLowerCase().includes(ql) || a.appId.includes(ql));
+  return hits.length ? hits : db.slice(0, 4);
+}
+
+function mockScan(appId, title, developer) {
+  const trusted = /google|meta|whatsapp|spotify|instagram|netflix|amazon|microsoft/i.test(developer);
+  const cleaner = /cleaner|booster|optimizer|speed|ram|junk|master/i.test(title);
+
+  const fake = cleaner ? 72 : trusted ? 57 : 42;
+  const perm = cleaner ? 65 : trusted ? 6  : 28;
+  const dev  = trusted ? 80 : cleaner ? 25 : 52;
+  const mal  = cleaner ? 22 : 0;
+  const sent = trusted ? 100: cleaner ? 58 : 75;
+  const saf  = Math.min(99, Math.max(0, Math.round(
+    (100-fake)*.25 + (100-perm)*.20 + dev*.25 + (100-mal)*.10 + sent*.20)));
+
+  return {
+    app: {
+      appId, title, developer, icon:'', genre: trusted ? 'Communication' : 'Tools',
+      score: trusted ? 4.1 : cleaner ? 3.6 : 3.9,
+      ratings: trusted ? 6200000 : 50000,
+      reviews: trusted ? 22300000 : 30000,
+      installs: trusted ? '500,000,000+' : '5,000,000+',
+      minInstalls: trusted ? 500000000 : 5000000,
+      version: trusted ? '2.26.18.74' : '3.1.2',
+      free: true, adSupported: cleaner, containsAds: cleaner,
+      url: `https://play.google.com/store/apps/details?id=${appId}`,
+      permissions: trusted ? ['android.permission.INTERNET','android.permission.CAMERA','android.permission.RECORD_AUDIO']
+                           : ['android.permission.INTERNET','android.permission.READ_EXTERNAL_STORAGE','android.permission.ACCESS_FINE_LOCATION'],
+    },
+    analysis: {
+      safetyScore: saf, safetyGrade: gradeOf(saf),
+      riskLevel: saf>=75?'LOW':saf>=50?'MEDIUM':'HIGH',
+      safeToUse: saf >= 65,
+      betterThanPct: Math.min(99, saf + 8),
+      fakeReviewRisk: fake,  fakeReviewLabel:  fake>=60?'High':fake>=30?'Medium':'Low',
+      permissionsRisk: perm, permissionsLabel: perm>=60?'High':perm>=30?'Medium':'Low',
+      developerTrust:  dev,  developerLabel:   dev>=60?'High':dev>=30?'Medium':'Low',
+      malwareRisk: mal,      malwareLabel:     mal===0?'Safe':mal<30?'Low':'High',
+      sentimentScore: sent, reviewsAnalyzed: trusted?'22.3M':'30K',
+      lastAnalyzed: 'Just now', permissionDetails:[],
+    }
+  };
+}
+</script>
+</body>
+</html>
