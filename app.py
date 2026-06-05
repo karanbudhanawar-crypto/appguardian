@@ -25,7 +25,7 @@ CORS(app)  # Allow frontend to call this API from any origin
 @app.route("/")
 def index():
     import os
-    frontend = os.path.join(os.path.dirname(__file__), "../frontend/index.html")
+    frontend = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend", "index.html")
     if os.path.exists(frontend):
         from flask import send_file
         return send_file(frontend)
@@ -126,3 +126,4 @@ if __name__ == "__main__":
     print("═" * 55 + "\n")
     port = int(__import__("os").environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
+
