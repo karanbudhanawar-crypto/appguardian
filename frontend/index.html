@@ -258,6 +258,101 @@ nav{display:flex;justify-content:space-between;align-items:center;
 </style>
 </head>
 <body>
+
+<!-- ══════════════════════════════════════
+     LOGIN PAGE — shows first
+══════════════════════════════════════ -->
+<div id="login-page" style="display:flex;position:fixed;inset:0;background:#080c08;z-index:99999;align-items:center;justify-content:center">
+  <!-- Scanlines -->
+  <div style="position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px)"></div>
+
+  <div style="width:100%;max-width:420px;padding:24px;position:relative;z-index:1">
+
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:40px">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:52px;font-weight:800;
+        color:#00ff41;letter-spacing:-2px;
+        text-shadow:0 0 20px rgba(0,255,65,.5),0 0 60px rgba(0,255,65,.2);
+        animation:flicker2 9s infinite">GUARDIAN</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5a8a5a;margin-top:6px;letter-spacing:1px">
+        > trust the app. not the rating.</div>
+    </div>
+
+    <!-- Card -->
+    <div style="background:#0c100c;border:1px solid rgba(0,255,65,.25);padding:32px">
+
+      <!-- Tabs -->
+      <div style="display:flex;margin-bottom:28px;border-bottom:1px solid #1a3a1a">
+        <button id="tab-signin" onclick="switchTab('signin')"
+          style="flex:1;background:none;border:none;padding:10px;font-family:'JetBrains Mono',monospace;
+          font-size:12px;cursor:pointer;border-bottom:2px solid #00ff41;color:#00ff41;transition:all .2s">
+          sign_in
+        </button>
+        <button id="tab-signup" onclick="switchTab('signup')"
+          style="flex:1;background:none;border:none;padding:10px;font-family:'JetBrains Mono',monospace;
+          font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:#5a8a5a;transition:all .2s">
+          create_account
+        </button>
+      </div>
+
+      <!-- Email -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:9px;color:#5a8a5a;font-family:'JetBrains Mono',monospace;
+          letter-spacing:1.5px;margin-bottom:6px">EMAIL</div>
+        <div style="display:flex;align-items:center;background:#080c08;border:1px solid #1a3a1a;
+          transition:border .2s" id="email-wrap">
+          <span style="color:#00ff41;padding:0 10px;font-size:13px;flex-shrink:0">›</span>
+          <input id="auth-email" type="email" placeholder="user@example.com"
+            style="flex:1;background:none;border:none;padding:11px 10px 11px 0;
+            color:#b8ffb8;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none"
+            onfocus="document.getElementById('email-wrap').style.borderColor='#00ff41'"
+            onblur="document.getElementById('email-wrap').style.borderColor='#1a3a1a'"/>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div style="margin-bottom:24px">
+        <div style="font-size:9px;color:#5a8a5a;font-family:'JetBrains Mono',monospace;
+          letter-spacing:1.5px;margin-bottom:6px">PASSWORD</div>
+        <div style="display:flex;align-items:center;background:#080c08;border:1px solid #1a3a1a;
+          transition:border .2s" id="pass-wrap">
+          <span style="color:#00ff41;padding:0 10px;font-size:13px;flex-shrink:0">›</span>
+          <input id="auth-password" type="password" placeholder="••••••••"
+            style="flex:1;background:none;border:none;padding:11px 10px 11px 0;
+            color:#b8ffb8;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none"
+            onfocus="document.getElementById('pass-wrap').style.borderColor='#00ff41'"
+            onblur="document.getElementById('pass-wrap').style.borderColor='#1a3a1a'"
+            onkeydown="if(event.key==='Enter')submitAuth()"/>
+        </div>
+      </div>
+
+      <!-- Submit btn -->
+      <button onclick="submitAuth()" id="auth-btn"
+        style="width:100%;background:#00ff41;border:none;color:#080c08;
+        padding:13px;font-family:'JetBrains Mono',monospace;font-size:13px;
+        font-weight:700;cursor:pointer;margin-bottom:12px;transition:all .2s;letter-spacing:.5px">
+        → sign in
+      </button>
+
+      <!-- Message -->
+      <div id="auth-msg" style="font-size:11px;font-family:'JetBrains Mono',monospace;
+        text-align:center;min-height:18px;color:#5a8a5a"></div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align:center;margin-top:20px;font-size:10px;
+      color:#2d4a2d;font-family:'JetBrains Mono',monospace;letter-spacing:1px">
+      APP_GUARDIAN v1.0 &nbsp;·&nbsp; AI-powered scam detection
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes flicker2{0%,94%,100%{opacity:1}95%{opacity:.75}96%{opacity:1}97.5%{opacity:.6}98%{opacity:1}}
+</style>
+
+
 <div class="grid-bg"></div>
 
 <!-- API Status indicator -->
@@ -287,10 +382,7 @@ nav{display:flex;justify-content:space-between;align-items:center;
     </div>
     <div class="nav-right">
       <a class="nav-link" href="#">home</a>
-      <button class="btn-login" onclick="openLogin()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        login
-      </button>
+      
     </div>
   </nav>
 
@@ -870,5 +962,126 @@ function mockScan(appId, title, developer) {
       }
     });
   </script>
+</div><!-- end main-app -->
+
+<script>
+// ── SUPABASE AUTH ────────────────────────────────
+const SUPABASE_URL = 'https://qqlebqijyipypxfajoel.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_XemGt8ZrB7W8u2XRLREDZA_ztWvBdI4';
+let sb = null;
+
+// Load Supabase from CDN
+const sbScript = document.createElement('script');
+sbScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+sbScript.onload = async () => {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // Check if already logged in
+  const { data: { session } } = await sb.auth.getSession();
+  if(session && session.user) {
+    enterApp(session.user);
+  }
+};
+document.head.appendChild(sbScript);
+
+let currentTab = 'signin';
+
+function switchTab(tab) {
+  currentTab = tab;
+  const btn = document.getElementById('auth-btn');
+  const t1 = document.getElementById('tab-signin');
+  const t2 = document.getElementById('tab-signup');
+  if(tab === 'signin') {
+    btn.textContent = '→ sign in';
+    t1.style.borderBottomColor = '#00ff41'; t1.style.color = '#00ff41';
+    t2.style.borderBottomColor = 'transparent'; t2.style.color = '#5a8a5a';
+  } else {
+    btn.textContent = '→ create account';
+    t2.style.borderBottomColor = '#00ff41'; t2.style.color = '#00ff41';
+    t1.style.borderBottomColor = 'transparent'; t1.style.color = '#5a8a5a';
+  }
+  document.getElementById('auth-msg').textContent = '';
+}
+
+async function submitAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-password').value;
+  const msg   = document.getElementById('auth-msg');
+  const btn   = document.getElementById('auth-btn');
+
+  if(!email || !pass) {
+    msg.style.color = '#ff4d6d';
+    msg.textContent = '> please fill in all fields';
+    return;
+  }
+  if(!sb) {
+    msg.style.color = '#ff4d6d';
+    msg.textContent = '> loading auth... try again';
+    return;
+  }
+
+  btn.textContent = '> processing...';
+  btn.style.opacity = '.7';
+  btn.disabled = true;
+  msg.style.color = '#5a8a5a';
+  msg.textContent = '> connecting to server...';
+
+  try {
+    let result;
+    if(currentTab === 'signin') {
+      result = await sb.auth.signInWithPassword({ email, password: pass });
+    } else {
+      result = await sb.auth.signUp({ email, password: pass });
+    }
+
+    if(result.error) {
+      msg.style.color = '#ff4d6d';
+      msg.textContent = '> ' + result.error.message;
+      btn.textContent = currentTab === 'signin' ? '→ sign in' : '→ create account';
+      btn.style.opacity = '1';
+      btn.disabled = false;
+      return;
+    }
+
+    if(currentTab === 'signup' && !result.data.session) {
+      msg.style.color = '#00ff41';
+      msg.textContent = '> check your email to confirm!';
+      btn.textContent = '→ create account';
+      btn.style.opacity = '1';
+      btn.disabled = false;
+      return;
+    }
+
+    msg.style.color = '#00ff41';
+    msg.textContent = '> access granted ✓';
+    setTimeout(() => enterApp(result.data.user), 800);
+
+  } catch(e) {
+    msg.style.color = '#ff4d6d';
+    msg.textContent = '> ' + e.message;
+    btn.textContent = currentTab === 'signin' ? '→ sign in' : '→ create account';
+    btn.style.opacity = '1';
+    btn.disabled = false;
+  }
+}
+
+function enterApp(user) {
+  // Hide login page with fade
+  const lp = document.getElementById('login-page');
+  lp.style.transition = 'opacity .5s';
+  lp.style.opacity = '0';
+  setTimeout(() => {
+    lp.style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+  }, 500);
+}
+
+// Check session on load
+window.addEventListener('load', async () => {
+  if(!sb) return;
+  const { data: { session } } = await sb.auth.getSession();
+  if(session && session.user) enterApp(session.user);
+});
+</script>
+
 </body>
 </html>
