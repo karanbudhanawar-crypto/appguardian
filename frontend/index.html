@@ -262,15 +262,16 @@ nav{display:flex;justify-content:space-between;align-items:center;
 <!-- ══════════════════════════════════════
      LOGIN PAGE — shows first
 ══════════════════════════════════════ -->
-<div id="login-page" style="display:flex;position:fixed;inset:0;background:#080c08;z-index:99999;align-items:center;justify-content:center">
+<div id="login-page" style="display:flex;position:fixed;inset:0;background:#080c08;z-index:99999;align-items:center;justify-content:center;overflow-y:auto">
+
   <!-- Scanlines -->
   <div style="position:absolute;inset:0;pointer-events:none;
     background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px)"></div>
 
-  <div style="width:100%;max-width:420px;padding:24px;position:relative;z-index:1">
+  <div style="width:100%;max-width:460px;padding:24px 20px;position:relative;z-index:1">
 
     <!-- Logo -->
-    <div style="text-align:center;margin-bottom:40px">
+    <div style="text-align:center;margin-bottom:36px">
       <div style="font-family:'Share Tech Mono',monospace;font-size:52px;font-weight:800;
         color:#00ff41;letter-spacing:-2px;
         text-shadow:0 0 20px rgba(0,255,65,.5),0 0 60px rgba(0,255,65,.2);
@@ -280,100 +281,155 @@ nav{display:flex;justify-content:space-between;align-items:center;
     </div>
 
     <!-- Card -->
-    <div style="background:#0c100c;border:1px solid rgba(0,255,65,.25);padding:32px">
+    <div style="background:#0c100c;border:1px solid rgba(0,255,65,.25);padding:28px 28px 24px;position:relative">
 
-      <!-- Tabs -->
-      <div style="display:flex;margin-bottom:28px;border-bottom:1px solid #1a3a1a">
+      <!-- top accent line -->
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;
+        background:linear-gradient(90deg,transparent,#00ff41,transparent)"></div>
+
+      <!-- ── 3 TABS ── -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;margin-bottom:26px;border-bottom:1px solid #1a3a1a">
+
         <button id="tab-signin" onclick="switchTab('signin')"
-          style="flex:1;background:none;border:none;padding:10px;font-family:'JetBrains Mono',monospace;
-          font-size:12px;cursor:pointer;border-bottom:2px solid #00ff41;color:#00ff41;transition:all .2s">
+          style="background:none;border:none;border-bottom:2px solid #00ff41;
+          padding:10px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;
+          cursor:pointer;color:#00ff41;transition:all .2s;white-space:nowrap;letter-spacing:.3px">
           sign_in
         </button>
+
         <button id="tab-signup" onclick="switchTab('signup')"
-          style="flex:1;background:none;border:none;padding:10px;font-family:'JetBrains Mono',monospace;
-          font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:#5a8a5a;transition:all .2s">
+          style="background:none;border:none;border-bottom:2px solid transparent;
+          padding:10px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;
+          cursor:pointer;color:#5a8a5a;transition:all .2s;white-space:nowrap;letter-spacing:.3px">
           create_account
         </button>
+
+        <button id="tab-guest" onclick="switchTab('guest')"
+          style="background:none;border:none;border-bottom:2px solid transparent;
+          padding:10px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;
+          cursor:pointer;color:#5a8a5a;transition:all .2s;white-space:nowrap;letter-spacing:.3px"
+          onmouseover="if(currentTab!=='guest')this.style.color='#ffaa00'"
+          onmouseout="if(currentTab!=='guest')this.style.color='#5a8a5a'">
+          guest
+        </button>
+
       </div>
 
-      <!-- Email -->
-      <div style="margin-bottom:16px">
-        <div style="font-size:9px;color:#5a8a5a;font-family:'JetBrains Mono',monospace;
-          letter-spacing:1.5px;margin-bottom:6px">EMAIL</div>
-        <div style="display:flex;align-items:center;background:#080c08;border:1px solid #1a3a1a;
-          transition:border .2s" id="email-wrap">
-          <span style="color:#00ff41;padding:0 10px;font-size:13px;flex-shrink:0">›</span>
-          <input id="auth-email" type="email" placeholder="user@example.com"
-            style="flex:1;background:none;border:none;padding:11px 10px 11px 0;
-            color:#b8ffb8;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none"
-            onfocus="document.getElementById('email-wrap').style.borderColor='#00ff41'"
-            onblur="document.getElementById('email-wrap').style.borderColor='#1a3a1a'"/>
+      <!-- ── AUTH FIELDS (sign_in + create_account) ── -->
+      <div id="auth-fields">
+
+        <!-- Username — create_account only -->
+        <div id="name-wrap-outer" style="margin-bottom:14px;display:none">
+          <div style="font-size:9px;color:#5a8a5a;font-family:'JetBrains Mono',monospace;
+            letter-spacing:1.5px;margin-bottom:6px">USERNAME</div>
+          <div style="display:flex;align-items:center;background:#080c08;border:1px solid #1a3a1a;transition:border .2s" id="name-border">
+            <span style="color:#00ff41;padding:0 10px;font-size:13px;flex-shrink:0">›</span>
+            <input id="auth-name" type="text" placeholder="your name"
+              style="flex:1;background:none;border:none;padding:11px 10px 11px 0;
+              color:#b8ffb8;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none"
+              onfocus="document.getElementById('name-border').style.borderColor='#00ff41'"
+              onblur="document.getElementById('name-border').style.borderColor='#1a3a1a'"
+              onkeydown="if(event.key==='Enter')submitAuth()"/>
+          </div>
         </div>
-      </div>
 
-      <!-- Password -->
-      <div style="margin-bottom:24px">
-        <div style="font-size:9px;color:#5a8a5a;font-family:'JetBrains Mono',monospace;
-          letter-spacing:1.5px;margin-bottom:6px">PASSWORD</div>
-        <div style="display:flex;align-items:center;background:#080c08;border:1px solid #1a3a1a;
-          transition:border .2s" id="pass-wrap">
-          <span style="color:#00ff41;padding:0 10px;font-size:13px;flex-shrink:0">›</span>
-          <input id="auth-password" type="password" placeholder="••••••••"
-            style="flex:1;background:none;border:none;padding:11px 10px 11px 0;
-            color:#b8ffb8;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none"
-            onfocus="document.getElementById('pass-wrap').style.borderColor='#00ff41'"
-            onblur="document.getElementById('pass-wrap').style.borderColor='#1a3a1a'"
-            onkeydown="if(event.key==='Enter')submitAuth()"/>
+        <!-- Email -->
+        <div style="margin-bottom:14px">
+          <div style="font-size:9px;color:#5a8a5a;font-family:'JetBrains Mono',monospace;
+            letter-spacing:1.5px;margin-bottom:6px">EMAIL</div>
+          <div style="display:flex;align-items:center;background:#080c08;border:1px solid #1a3a1a;transition:border .2s" id="email-wrap">
+            <span style="color:#00ff41;padding:0 10px;font-size:13px;flex-shrink:0">›</span>
+            <input id="auth-email" type="email" placeholder="user@example.com"
+              style="flex:1;background:none;border:none;padding:11px 10px 11px 0;
+              color:#b8ffb8;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none"
+              onfocus="document.getElementById('email-wrap').style.borderColor='#00ff41'"
+              onblur="document.getElementById('email-wrap').style.borderColor='#1a3a1a'"
+              onkeydown="if(event.key==='Enter')submitAuth()"/>
+          </div>
         </div>
-      </div>
 
-      <!-- Confirm Password (signup only, hidden by default) -->
-      <div id="confirm-wrap" style="margin-bottom:24px;display:none">
-        <div style="font-size:9px;color:#5a8a5a;font-family:'JetBrains Mono',monospace;
-          letter-spacing:1.5px;margin-bottom:6px">CONFIRM PASSWORD</div>
-        <div style="display:flex;align-items:center;background:#080c08;border:1px solid #1a3a1a;
-          transition:border .2s" id="confirm-border">
-          <span style="color:#00ff41;padding:0 10px;font-size:13px;flex-shrink:0">›</span>
-          <input id="auth-confirm" type="password" placeholder="••••••••"
-            style="flex:1;background:none;border:none;padding:11px 10px 11px 0;
-            color:#b8ffb8;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none"
-            onfocus="document.getElementById('confirm-border').style.borderColor='#00ff41'"
-            onblur="document.getElementById('confirm-border').style.borderColor='#1a3a1a'"
-            onkeydown="if(event.key==='Enter')submitAuth()"/>
+        <!-- Password -->
+        <div style="margin-bottom:14px">
+          <div style="font-size:9px;color:#5a8a5a;font-family:'JetBrains Mono',monospace;
+            letter-spacing:1.5px;margin-bottom:6px">PASSWORD</div>
+          <div style="display:flex;align-items:center;background:#080c08;border:1px solid #1a3a1a;transition:border .2s" id="pass-wrap">
+            <span style="color:#00ff41;padding:0 10px;font-size:13px;flex-shrink:0">›</span>
+            <input id="auth-password" type="password" placeholder="••••••••"
+              style="flex:1;background:none;border:none;padding:11px 10px 11px 0;
+              color:#b8ffb8;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none"
+              onfocus="document.getElementById('pass-wrap').style.borderColor='#00ff41'"
+              onblur="document.getElementById('pass-wrap').style.borderColor='#1a3a1a'"
+              onkeydown="if(event.key==='Enter')submitAuth()"/>
+          </div>
         </div>
+
+        <!-- Confirm Password — create_account only -->
+        <div id="confirm-wrap" style="margin-bottom:14px;display:none">
+          <div style="font-size:9px;color:#5a8a5a;font-family:'JetBrains Mono',monospace;
+            letter-spacing:1.5px;margin-bottom:6px">CONFIRM PASSWORD</div>
+          <div style="display:flex;align-items:center;background:#080c08;border:1px solid #1a3a1a;transition:border .2s" id="confirm-border">
+            <span style="color:#00ff41;padding:0 10px;font-size:13px;flex-shrink:0">›</span>
+            <input id="auth-confirm" type="password" placeholder="••••••••"
+              style="flex:1;background:none;border:none;padding:11px 10px 11px 0;
+              color:#b8ffb8;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none"
+              onfocus="document.getElementById('confirm-border').style.borderColor='#00ff41'"
+              onblur="document.getElementById('confirm-border').style.borderColor='#1a3a1a'"
+              onkeydown="if(event.key='Enter')submitAuth()"/>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button onclick="submitAuth()" id="auth-btn"
+          style="width:100%;background:#00ff41;border:none;color:#080c08;
+          padding:13px;font-family:'JetBrains Mono',monospace;font-size:13px;
+          font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:10px;
+          transition:all .2s;letter-spacing:.5px">
+          → sign in
+        </button>
+
       </div>
 
-      <!-- Demo hint -->
-      <div id="demo-hint" style="font-size:10px;color:#3a5a3a;font-family:'JetBrains Mono',monospace;
-        text-align:center;margin-bottom:14px;line-height:1.8">
-        demo login: <span style="color:#5a8a5a">demo@guardian.app</span> / <span style="color:#5a8a5a">demo1234</span>
+      <!-- ── GUEST PANEL ── -->
+      <div id="guest-panel" style="display:none;padding:10px 0 6px">
+        <div style="text-align:center;margin-bottom:22px">
+          <div style="font-size:28px;margin-bottom:10px">👤</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#b8ffb8;margin-bottom:6px">
+            Continue without an account
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#3a5a3a;line-height:1.8">
+            > scan apps &amp; view results<br/>
+            > no registration required<br/>
+            <span style="color:#2a4a2a">> history not saved</span>
+          </div>
+        </div>
+        <button onclick="enterGuest()"
+          style="width:100%;background:transparent;border:1px solid #ffaa00;color:#ffaa00;
+          padding:13px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;
+          cursor:pointer;letter-spacing:.5px;transition:all .2s"
+          onmouseover="this.style.background='rgba(255,170,0,.1)'"
+          onmouseout="this.style.background='transparent'">
+          → continue as guest
+        </button>
       </div>
-
-      <!-- Submit btn -->
-      <button onclick="submitAuth()" id="auth-btn"
-        style="width:100%;background:#00ff41;border:none;color:#080c08;
-        padding:13px;font-family:'JetBrains Mono',monospace;font-size:13px;
-        font-weight:700;cursor:pointer;margin-bottom:12px;transition:all .2s;letter-spacing:.5px">
-        → sign in
-      </button>
 
       <!-- Message -->
       <div id="auth-msg" style="font-size:11px;font-family:'JetBrains Mono',monospace;
-        text-align:center;min-height:18px;color:#5a8a5a"></div>
-    </div>
+        text-align:center;min-height:16px;color:#5a8a5a;margin-top:6px"></div>
+
+    </div><!-- end card -->
 
     <!-- Footer -->
-    <div style="text-align:center;margin-top:20px;font-size:10px;
+    <div style="text-align:center;margin-top:18px;font-size:10px;
       color:#2d4a2d;font-family:'JetBrains Mono',monospace;letter-spacing:1px">
       APP_GUARDIAN v1.0 &nbsp;·&nbsp; AI-powered scam detection
     </div>
+
   </div>
 </div>
 
 <style>
 @keyframes flicker2{0%,94%,100%{opacity:1}95%{opacity:.75}96%{opacity:1}97.5%{opacity:.6}98%{opacity:1}}
 </style>
-
 
 <div id="main-app" style="display:none"><div class="grid-bg"></div>
 
@@ -937,192 +993,219 @@ function mockScan(appId, title, developer) {
 const USERS_KEY   = 'ag_users_v1';
 const SESSION_KEY = 'ag_session_v1';
 
-// ── Helpers ──────────────────────────────────────────────
+// ── Storage (dual-write: localStorage + sessionStorage) ───────────────────
+function _lsSet(k, v) {
+  try { localStorage.setItem(k, v); } catch {}
+  try { sessionStorage.setItem(k, v); } catch {}
+}
+function _lsGet(k) {
+  try { return localStorage.getItem(k) || sessionStorage.getItem(k); } catch {
+    try { return sessionStorage.getItem(k); } catch { return null; }
+  }
+}
+function _lsDel(k) {
+  try { localStorage.removeItem(k); } catch {}
+  try { sessionStorage.removeItem(k); } catch {}
+}
 function getUsers() {
-  try { return JSON.parse(localStorage.getItem(USERS_KEY) || '{}'); } catch { return {}; }
+  try { return JSON.parse(_lsGet(USERS_KEY) || '{}'); } catch { return {}; }
 }
-function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+function saveUsers(u) { _lsSet(USERS_KEY, JSON.stringify(u)); }
 function getSession() {
-  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch { return null; }
+  try { return JSON.parse(_lsGet(SESSION_KEY) || 'null'); } catch { return null; }
 }
-function saveSession(user) { localStorage.setItem(SESSION_KEY, JSON.stringify(user)); }
-function clearSession() { localStorage.removeItem(SESSION_KEY); }
+function saveSession(u) { _lsSet(SESSION_KEY, JSON.stringify(u)); }
+function clearSession() { _lsDel(SESSION_KEY); }
 
+// ── UI helpers ────────────────────────────────────────────────────────────
 function setMsg(text, color) {
   const el = document.getElementById('auth-msg');
-  el.textContent = text;
-  el.style.color = color || '#5a8a5a';
+  if (el) { el.textContent = text; el.style.color = color || '#5a8a5a'; }
 }
 function setBtn(text, disabled) {
   const btn = document.getElementById('auth-btn');
-  btn.textContent = text;
-  btn.disabled = disabled;
+  if (!btn) return;
+  btn.textContent = text; btn.disabled = disabled;
   btn.style.opacity = disabled ? '.6' : '1';
 }
 
-// ── Seed demo account ────────────────────────────────────
+// ── Seed demo account ─────────────────────────────────────────────────────
 (function seedDemo() {
-  const users = getUsers();
-  if (!users['demo@guardian.app']) {
-    users['demo@guardian.app'] = { password: 'demo1234', name: 'Demo' };
-    saveUsers(users);
-  }
+  const u = getUsers();
+  u['demo@guardian.app'] = { password: 'demo1234', name: 'Demo' };
+  saveUsers(u);
 })();
 
-// ── Tab switching ────────────────────────────────────────
+// ── Tab switching ─────────────────────────────────────────────────────────
 let currentTab = 'signin';
 
 function switchTab(tab) {
   currentTab = tab;
-  const t1  = document.getElementById('tab-signin');
-  const t2  = document.getElementById('tab-signup');
-  const cw  = document.getElementById('confirm-wrap');
-  const dh  = document.getElementById('demo-hint');
+  const tabs = { signin: document.getElementById('tab-signin'), signup: document.getElementById('tab-signup'), guest: document.getElementById('tab-guest') };
+  const fields      = document.getElementById('auth-fields');
+  const guestPanel  = document.getElementById('guest-panel');
+  const confirmWrap = document.getElementById('confirm-wrap');
+  const nameWrap    = document.getElementById('name-wrap-outer');
+
+  // Reset all tabs
+  Object.values(tabs).forEach(t => {
+    if (!t) return;
+    t.style.borderBottomColor = 'transparent';
+    t.style.color = '#5a8a5a';
+  });
+
+  setMsg('');
 
   if (tab === 'signin') {
+    tabs.signin.style.borderBottomColor = '#00ff41';
+    tabs.signin.style.color = '#00ff41';
+    if (fields) fields.style.display = '';
+    if (guestPanel) guestPanel.style.display = 'none';
+    if (confirmWrap) confirmWrap.style.display = 'none';
+    if (nameWrap) nameWrap.style.display = 'none';
     setBtn('→ sign in', false);
-    t1.style.borderBottomColor = '#00ff41'; t1.style.color = '#00ff41';
-    t2.style.borderBottomColor = 'transparent'; t2.style.color = '#5a8a5a';
-    if (cw) cw.style.display = 'none';
-    if (dh) dh.style.display = 'block';
-  } else {
+
+  } else if (tab === 'signup') {
+    tabs.signup.style.borderBottomColor = '#00ff41';
+    tabs.signup.style.color = '#00ff41';
+    if (fields) fields.style.display = '';
+    if (guestPanel) guestPanel.style.display = 'none';
+    if (confirmWrap) confirmWrap.style.display = '';
+    if (nameWrap) nameWrap.style.display = '';
     setBtn('→ create account', false);
-    t2.style.borderBottomColor = '#00ff41'; t2.style.color = '#00ff41';
-    t1.style.borderBottomColor = 'transparent'; t1.style.color = '#5a8a5a';
-    if (cw) cw.style.display = 'block';
-    if (dh) dh.style.display = 'none';
+
+  } else if (tab === 'guest') {
+    tabs.guest.style.borderBottomColor = '#ffaa00';
+    tabs.guest.style.color = '#ffaa00';
+    if (fields) fields.style.display = 'none';
+    if (guestPanel) guestPanel.style.display = '';
+    setMsg('');
   }
-  setMsg('');
 }
 
-// ── Submit handler ────────────────────────────────────────
+// ── Guest login ───────────────────────────────────────────────────────────
+function enterGuest() {
+  setMsg('> entering as guest...', '#ffaa00');
+  setTimeout(() => {
+    enterApp({ email: 'guest', name: 'Guest', isGuest: true });
+  }, 400);
+}
+
+// ── Submit (sign in / create account) ────────────────────────────────────
 function submitAuth() {
   const email   = (document.getElementById('auth-email').value || '').trim().toLowerCase();
-  const pass    = (document.getElementById('auth-password').value || '');
-  const confirm = (document.getElementById('auth-confirm') ? document.getElementById('auth-confirm').value : '');
+  const pass    = document.getElementById('auth-password').value || '';
+  const confirm = (document.getElementById('auth-confirm') || {}).value || '';
+  const nameVal = (document.getElementById('auth-name') || {}).value || '';
 
-  // Validation
-  if (!email || !email.includes('@')) {
-    setMsg('> enter a valid email address', '#ff4d6d'); return;
-  }
-  if (pass.length < 6) {
-    setMsg('> password must be at least 6 characters', '#ff4d6d'); return;
-  }
+  if (!email || !email.includes('@')) { setMsg('> enter a valid email', '#ff4d6d'); return; }
+  if (pass.length < 6) { setMsg('> password must be 6+ characters', '#ff4d6d'); return; }
 
+  const label = currentTab === 'signin' ? '→ sign in' : '→ create account';
   setBtn('> authenticating...', true);
   setMsg('> connecting...', '#5a8a5a');
 
-  // Small delay for realism
   setTimeout(() => {
     const users = getUsers();
 
     if (currentTab === 'signin') {
-      // ── LOGIN ──
       if (!users[email]) {
-        setMsg('> account not found — please create one', '#ff4d6d');
-        setBtn('→ sign in', false); return;
+        setMsg('> no account found — use create_account tab', '#ff4d6d');
+        // Flash signup tab
+        const t2 = document.getElementById('tab-signup');
+        if (t2) { t2.style.color='#ff4d6d'; setTimeout(()=>{ t2.style.color='#5a8a5a'; }, 1500); }
+        setBtn(label, false); return;
       }
       if (users[email].password !== pass) {
         setMsg('> incorrect password', '#ff4d6d');
-        setBtn('→ sign in', false); return;
+        setBtn(label, false); return;
       }
-      // Success
+      const user = { email, name: users[email].name || email.split('@')[0] };
+      saveSession(user);
       setMsg('> access granted ✓', '#00ff41');
-      saveSession({ email, name: users[email].name || email.split('@')[0] });
-      setTimeout(() => enterApp({ email, name: users[email].name || email.split('@')[0] }), 600);
+      setTimeout(() => enterApp(user), 600);
 
     } else {
-      // ── SIGNUP ──
-      if (pass !== confirm) {
-        setMsg('> passwords do not match', '#ff4d6d');
-        setBtn('→ create account', false); return;
-      }
-      if (users[email]) {
-        setMsg('> account already exists — please sign in', '#ff4d6d');
-        setBtn('→ create account', false); return;
-      }
-      // Create account
-      const name = email.split('@')[0];
+      // signup
+      if (pass !== confirm) { setMsg('> passwords do not match', '#ff4d6d'); setBtn(label, false); return; }
+      if (users[email]) { setMsg('> account exists — use sign_in tab', '#ff4d6d'); setBtn(label, false); return; }
+      const name = nameVal.trim() || email.split('@')[0];
       users[email] = { password: pass, name };
       saveUsers(users);
-      saveSession({ email, name });
-      setMsg('> account created ✓ welcome!', '#00ff41');
-      setTimeout(() => enterApp({ email, name }), 600);
+      const user = { email, name };
+      saveSession(user);
+      setMsg('> account created ✓', '#00ff41');
+      setTimeout(() => enterApp(user), 600);
     }
   }, 500);
 }
 
-// ── Enter the main app ────────────────────────────────────
+// ── Enter main app ────────────────────────────────────────────────────────
 function enterApp(user) {
   const lp = document.getElementById('login-page');
   const ma = document.getElementById('main-app');
-
-  lp.style.transition = 'opacity .5s ease';
+  lp.style.transition = 'opacity .45s';
   lp.style.opacity = '0';
-
   setTimeout(() => {
     lp.style.display = 'none';
     ma.style.display = 'block';
     window.scrollTo(0, 0);
-
-    // Update nav button to show username + logout
-    const navRight = document.querySelector('.nav-right');
-    if (navRight) {
-      // Remove old login btn if present
-      const oldBtn = navRight.querySelector('.btn-login');
-      if (oldBtn) oldBtn.remove();
-      // Add user pill
-      const pill = document.createElement('div');
-      pill.style.cssText = 'display:flex;align-items:center;gap:10px';
-      pill.innerHTML = `
-        <span style="font-family:var(--font-mono);font-size:13px;color:var(--green3)">⬡ ${user.name || user.email.split('@')[0]}</span>
-        <button onclick="logoutUser()" style="border:1px solid rgba(255,59,59,.4);color:#ff4d6d;
-          background:transparent;padding:5px 12px;font-family:var(--font-mono);font-size:11px;
-          cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(255,59,59,.1)'"
-          onmouseout="this.style.background='transparent'">logout</button>`;
-      navRight.appendChild(pill);
-    }
-
-    // Trigger backend check
-    if (typeof checkBackend === 'function') checkBackend();
-  }, 500);
-}
-
-// ── Logout ───────────────────────────────────────────────
-function logoutUser() {
-  clearSession();
-  location.reload();
-}
-
-// ── Auto-login if session exists ─────────────────────────
-(function autoLogin() {
-  const session = getSession();
-  if (session && session.email) {
-    // Show app immediately without animation
-    document.getElementById('login-page').style.display = 'none';
-    document.getElementById('main-app').style.display = 'block';
     // Update nav
     const navRight = document.querySelector('.nav-right');
     if (navRight) {
-      const oldBtn = navRight.querySelector('.btn-login');
-      if (oldBtn) oldBtn.remove();
+      const old = navRight.querySelector('.btn-login');
+      if (old) old.remove();
       const pill = document.createElement('div');
       pill.style.cssText = 'display:flex;align-items:center;gap:10px';
+      const icon  = user.isGuest ? '👤' : '⬡';
+      const label = user.isGuest ? 'Guest' : (user.name || user.email.split('@')[0]);
+      const badgeColor = user.isGuest ? '#ffaa00' : 'var(--green3)';
       pill.innerHTML = `
-        <span style="font-family:var(--font-mono);font-size:13px;color:var(--green3)">⬡ ${session.name || session.email.split('@')[0]}</span>
+        <span style="font-family:var(--font-mono);font-size:13px;color:${badgeColor}">${icon} ${label}</span>
         <button onclick="logoutUser()" style="border:1px solid rgba(255,59,59,.4);color:#ff4d6d;
           background:transparent;padding:5px 12px;font-family:var(--font-mono);font-size:11px;
-          cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(255,59,59,.1)'"
+          cursor:pointer;transition:all .2s"
+          onmouseover="this.style.background='rgba(255,59,59,.1)'"
+          onmouseout="this.style.background='transparent'">logout</button>`;
+      navRight.appendChild(pill);
+    }
+    if (typeof checkBackend === 'function') checkBackend();
+  }, 450);
+}
+
+// ── Logout ────────────────────────────────────────────────────────────────
+function logoutUser() { clearSession(); location.reload(); }
+
+// ── Auto-login on page load ───────────────────────────────────────────────
+(function init() {
+  const session = getSession();
+  if (session && session.email) {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    const navRight = document.querySelector('.nav-right');
+    if (navRight) {
+      const old = navRight.querySelector('.btn-login');
+      if (old) old.remove();
+      const pill = document.createElement('div');
+      pill.style.cssText = 'display:flex;align-items:center;gap:10px';
+      const icon  = session.isGuest ? '👤' : '⬡';
+      const label = session.isGuest ? 'Guest' : (session.name || session.email.split('@')[0]);
+      const badgeColor = session.isGuest ? '#ffaa00' : 'var(--green3)';
+      pill.innerHTML = `
+        <span style="font-family:var(--font-mono);font-size:13px;color:${badgeColor}">${icon} ${label}</span>
+        <button onclick="logoutUser()" style="border:1px solid rgba(255,59,59,.4);color:#ff4d6d;
+          background:transparent;padding:5px 12px;font-family:var(--font-mono);font-size:11px;
+          cursor:pointer;transition:all .2s"
+          onmouseover="this.style.background='rgba(255,59,59,.1)'"
           onmouseout="this.style.background='transparent'">logout</button>`;
       navRight.appendChild(pill);
     }
   }
   // Enter key support
-  ['auth-email','auth-password','auth-confirm'].forEach(id => {
+  ['auth-email','auth-password','auth-confirm','auth-name'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(); });
   });
 })();
 </script>
-</body>
-</html>
+</body></html>
