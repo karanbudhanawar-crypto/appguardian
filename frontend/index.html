@@ -1086,8 +1086,10 @@ function switchTab(tab) {
 // ── Guest login ───────────────────────────────────────────────────────────
 function enterGuest() {
   setMsg('> entering as guest...', '#ffaa00');
-  setTimeout(() => {
-    enterApp({ email: 'guest', name: 'Guest', isGuest: true });
+  const guestUser = { email: 'guest', name: 'Guest', isGuest: true };
+  saveSession(guestUser);  // save immediately so reload restores
+  setTimeout(function() {
+    enterApp(guestUser);
   }, 400);
 }
 
@@ -1142,33 +1144,17 @@ function submitAuth() {
 
 // ── Enter main app ────────────────────────────────────────────────────────
 function enterApp(user) {
+  // Save session FIRST so reload always works
+  saveSession(user);
   const lp = document.getElementById('login-page');
   const ma = document.getElementById('main-app');
   lp.style.transition = 'opacity .45s';
   lp.style.opacity = '0';
-  setTimeout(() => {
+  setTimeout(function() {
     lp.style.display = 'none';
     ma.style.display = 'block';
     window.scrollTo(0, 0);
-    // Update nav
-    const navRight = document.querySelector('.nav-right');
-    if (navRight) {
-      const old = navRight.querySelector('.btn-login');
-      if (old) old.remove();
-      const pill = document.createElement('div');
-      pill.style.cssText = 'display:flex;align-items:center;gap:10px';
-      const icon  = user.isGuest ? '👤' : '⬡';
-      const label = user.isGuest ? 'Guest' : (user.name || user.email.split('@')[0]);
-      const badgeColor = user.isGuest ? '#ffaa00' : 'var(--green3)';
-      pill.innerHTML = `
-        <span style="font-family:var(--font-mono);font-size:13px;color:${badgeColor}">${icon} ${label}</span>
-        <button onclick="logoutUser()" style="border:1px solid rgba(255,59,59,.4);color:#ff4d6d;
-          background:transparent;padding:5px 12px;font-family:var(--font-mono);font-size:11px;
-          cursor:pointer;transition:all .2s"
-          onmouseover="this.style.background='rgba(255,59,59,.1)'"
-          onmouseout="this.style.background='transparent'">logout</button>`;
-      navRight.appendChild(pill);
-    }
+    buildNavPill(user);
     if (typeof checkBackend === 'function') checkBackend();
   }, 450);
 }
@@ -1177,35 +1163,53 @@ function enterApp(user) {
 function logoutUser() { clearSession(); location.reload(); }
 
 // ── Auto-login on page load ───────────────────────────────────────────────
-(function init() {
+// ── Build nav user pill ───────────────────────────────────────────────────
+function buildNavPill(session) {
+  const navRight = document.querySelector('.nav-right');
+  if (!navRight) return;
+  // Remove old login btn or pill
+  Array.from(navRight.children).forEach(c => c.remove());
+  const pill = document.createElement('div');
+  pill.style.cssText = 'display:flex;align-items:center;gap:10px';
+  const icon       = session.isGuest ? '👤' : '⬡';
+  const label      = session.isGuest ? 'Guest' : (session.name || session.email.split('@')[0]);
+  const badgeColor = session.isGuest ? '#ffaa00' : '#009922';
+  pill.innerHTML = `
+    <span style="font-family:var(--font-mono);font-size:13px;color:${badgeColor}">${icon} ${label}</span>
+    <button onclick="logoutUser()"
+      style="border:1px solid rgba(255,59,59,.4);color:#ff4d6d;background:transparent;
+      padding:5px 12px;font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all .2s"
+      onmouseover="this.style.background='rgba(255,59,59,.1)'"
+      onmouseout="this.style.background='transparent'">logout</button>`;
+  navRight.appendChild(pill);
+}
+
+// ── Show main app immediately (no animation — used on reload) ─────────────
+function restoreApp(session) {
+  const lp = document.getElementById('login-page');
+  const ma = document.getElementById('main-app');
+  if (lp) lp.style.display = 'none';
+  if (ma) ma.style.display = 'block';
+  buildNavPill(session);
+  if (typeof checkBackend === 'function') checkBackend();
+}
+
+// ── Run on DOM ready ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+
+  // 1. Check for saved session → restore immediately
   const session = getSession();
   if (session && session.email) {
-    document.getElementById('login-page').style.display = 'none';
-    document.getElementById('main-app').style.display = 'block';
-    const navRight = document.querySelector('.nav-right');
-    if (navRight) {
-      const old = navRight.querySelector('.btn-login');
-      if (old) old.remove();
-      const pill = document.createElement('div');
-      pill.style.cssText = 'display:flex;align-items:center;gap:10px';
-      const icon  = session.isGuest ? '👤' : '⬡';
-      const label = session.isGuest ? 'Guest' : (session.name || session.email.split('@')[0]);
-      const badgeColor = session.isGuest ? '#ffaa00' : 'var(--green3)';
-      pill.innerHTML = `
-        <span style="font-family:var(--font-mono);font-size:13px;color:${badgeColor}">${icon} ${label}</span>
-        <button onclick="logoutUser()" style="border:1px solid rgba(255,59,59,.4);color:#ff4d6d;
-          background:transparent;padding:5px 12px;font-family:var(--font-mono);font-size:11px;
-          cursor:pointer;transition:all .2s"
-          onmouseover="this.style.background='rgba(255,59,59,.1)'"
-          onmouseout="this.style.background='transparent'">logout</button>`;
-      navRight.appendChild(pill);
-    }
+    restoreApp(session);
   }
-  // Enter key support
-  ['auth-email','auth-password','auth-confirm','auth-name'].forEach(id => {
+
+  // 2. Enter key on all auth inputs
+  ['auth-email','auth-password','auth-confirm','auth-name'].forEach(function(id) {
     const el = document.getElementById(id);
-    if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(); });
+    if (el) el.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') submitAuth();
+    });
   });
-})();
+});
 </script>
 </body></html>
