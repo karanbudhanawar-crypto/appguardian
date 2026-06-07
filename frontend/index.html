@@ -327,6 +327,28 @@ nav{display:flex;justify-content:space-between;align-items:center;
         </div>
       </div>
 
+      <!-- Confirm Password (signup only, hidden by default) -->
+      <div id="confirm-wrap" style="margin-bottom:24px;display:none">
+        <div style="font-size:9px;color:#5a8a5a;font-family:'JetBrains Mono',monospace;
+          letter-spacing:1.5px;margin-bottom:6px">CONFIRM PASSWORD</div>
+        <div style="display:flex;align-items:center;background:#080c08;border:1px solid #1a3a1a;
+          transition:border .2s" id="confirm-border">
+          <span style="color:#00ff41;padding:0 10px;font-size:13px;flex-shrink:0">›</span>
+          <input id="auth-confirm" type="password" placeholder="••••••••"
+            style="flex:1;background:none;border:none;padding:11px 10px 11px 0;
+            color:#b8ffb8;font-family:'JetBrains Mono',monospace;font-size:13px;outline:none"
+            onfocus="document.getElementById('confirm-border').style.borderColor='#00ff41'"
+            onblur="document.getElementById('confirm-border').style.borderColor='#1a3a1a'"
+            onkeydown="if(event.key==='Enter')submitAuth()"/>
+        </div>
+      </div>
+
+      <!-- Demo hint -->
+      <div id="demo-hint" style="font-size:10px;color:#3a5a3a;font-family:'JetBrains Mono',monospace;
+        text-align:center;margin-bottom:14px;line-height:1.8">
+        demo login: <span style="color:#5a8a5a">demo@guardian.app</span> / <span style="color:#5a8a5a">demo1234</span>
+      </div>
+
       <!-- Submit btn -->
       <button onclick="submitAuth()" id="auth-btn"
         style="width:100%;background:#00ff41;border:none;color:#080c08;
@@ -353,7 +375,7 @@ nav{display:flex;justify-content:space-between;align-items:center;
 </style>
 
 
-<div class="grid-bg"></div>
+<div id="main-app" style="display:none"><div class="grid-bg"></div>
 
 <!-- API Status indicator -->
 <div class="api-status" id="api-status">
@@ -905,183 +927,202 @@ function mockScan(appId, title, developer) {
   };
 }
 </script>
-
-  <!-- SUPABASE AUTH -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    // Initialize Supabase
-    // Check if user is already logged in
-    const SUPABASE_URL = 'https://qqlebqijyipypxfajoel.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_XemGt8ZrB7W8u2XRLREDZA_ztWvBdI4';
-    const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-
-    function openLogin(){
-      const m = document.getElementById('login-modal');
-      m.style.display = 'flex';
-      setTimeout(()=>document.getElementById('login-email').focus(), 100);
-    }
-    function closeLogin(){
-      document.getElementById('login-modal').style.display = 'none';
-      document.getElementById('login-msg').textContent = '';
-    }
-
-    async function doLogin(){
-      const email = document.getElementById('login-email').value.trim();
-      const pass  = document.getElementById('login-password').value;
-      const msg   = document.getElementById('login-msg');
-      if(!email||!pass){ msg.style.color='#ff4d6d'; msg.textContent='> fill in all fields'; return; }
-      msg.style.color='#5a8a5a'; msg.textContent='> signing in...';
-      if(!sb){ msg.style.color='#ff4d6d'; msg.textContent='> supabase not configured'; return; }
-      const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
-      if(error){ msg.style.color='#ff4d6d'; msg.textContent='> '+error.message; return; }
-      msg.style.color='#00ff41'; msg.textContent='> signed in as '+data.user.email;
-      setTimeout(closeLogin, 1200);
-      // Update nav button
-      document.querySelector('.btn-login').textContent = '⬡ '+data.user.email.split('@')[0];
-    }
-
-    async function doSignup(){
-      const email = document.getElementById('login-email').value.trim();
-      const pass  = document.getElementById('login-password').value;
-      const msg   = document.getElementById('login-msg');
-      if(!email||!pass){ msg.style.color='#ff4d6d'; msg.textContent='> fill in all fields'; return; }
-      msg.style.color='#5a8a5a'; msg.textContent='> creating account...';
-      if(!sb){ msg.style.color='#ff4d6d'; msg.textContent='> supabase not configured'; return; }
-      const {data,error} = await sb.auth.signUp({email,password:pass});
-      if(error){ msg.style.color='#ff4d6d'; msg.textContent='> '+error.message; return; }
-      msg.style.color='#00ff41'; msg.textContent='> check your email to confirm!';
-    }
-
-    // Check existing session on load
-    window.addEventListener('load', async () => {
-      if(!sb) return;
-      const { data: { session } } = await sb.auth.getSession();
-      if(session && session.user) {
-        const btn = document.querySelector('.btn-login');
-        if(btn) btn.textContent = '⬡ ' + session.user.email.split('@')[0];
-      }
-    });
-  </script>
 </div><!-- end main-app -->
 
 <script>
-// ── SUPABASE AUTH ────────────────────────────────
-const SUPABASE_URL = 'https://qqlebqijyipypxfajoel.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_XemGt8ZrB7W8u2XRLREDZA_ztWvBdI4';
-let sb = null;
+// ═══════════════════════════════════════════════════════════
+//  APP GUARDIAN — Auth Engine (localStorage, no server needed)
+// ═══════════════════════════════════════════════════════════
 
-// Load Supabase from CDN
-const sbScript = document.createElement('script');
-sbScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-sbScript.onload = async () => {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  // Check if already logged in
-  const { data: { session } } = await sb.auth.getSession();
-  if(session && session.user) {
-    enterApp(session.user);
+const USERS_KEY   = 'ag_users_v1';
+const SESSION_KEY = 'ag_session_v1';
+
+// ── Helpers ──────────────────────────────────────────────
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem(USERS_KEY) || '{}'); } catch { return {}; }
+}
+function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+function getSession() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch { return null; }
+}
+function saveSession(user) { localStorage.setItem(SESSION_KEY, JSON.stringify(user)); }
+function clearSession() { localStorage.removeItem(SESSION_KEY); }
+
+function setMsg(text, color) {
+  const el = document.getElementById('auth-msg');
+  el.textContent = text;
+  el.style.color = color || '#5a8a5a';
+}
+function setBtn(text, disabled) {
+  const btn = document.getElementById('auth-btn');
+  btn.textContent = text;
+  btn.disabled = disabled;
+  btn.style.opacity = disabled ? '.6' : '1';
+}
+
+// ── Seed demo account ────────────────────────────────────
+(function seedDemo() {
+  const users = getUsers();
+  if (!users['demo@guardian.app']) {
+    users['demo@guardian.app'] = { password: 'demo1234', name: 'Demo' };
+    saveUsers(users);
   }
-};
-document.head.appendChild(sbScript);
+})();
 
+// ── Tab switching ────────────────────────────────────────
 let currentTab = 'signin';
 
 function switchTab(tab) {
   currentTab = tab;
-  const btn = document.getElementById('auth-btn');
-  const t1 = document.getElementById('tab-signin');
-  const t2 = document.getElementById('tab-signup');
-  if(tab === 'signin') {
-    btn.textContent = '→ sign in';
+  const t1  = document.getElementById('tab-signin');
+  const t2  = document.getElementById('tab-signup');
+  const cw  = document.getElementById('confirm-wrap');
+  const dh  = document.getElementById('demo-hint');
+
+  if (tab === 'signin') {
+    setBtn('→ sign in', false);
     t1.style.borderBottomColor = '#00ff41'; t1.style.color = '#00ff41';
     t2.style.borderBottomColor = 'transparent'; t2.style.color = '#5a8a5a';
+    if (cw) cw.style.display = 'none';
+    if (dh) dh.style.display = 'block';
   } else {
-    btn.textContent = '→ create account';
+    setBtn('→ create account', false);
     t2.style.borderBottomColor = '#00ff41'; t2.style.color = '#00ff41';
     t1.style.borderBottomColor = 'transparent'; t1.style.color = '#5a8a5a';
+    if (cw) cw.style.display = 'block';
+    if (dh) dh.style.display = 'none';
   }
-  document.getElementById('auth-msg').textContent = '';
+  setMsg('');
 }
 
-async function submitAuth() {
-  const email = document.getElementById('auth-email').value.trim();
-  const pass  = document.getElementById('auth-password').value;
-  const msg   = document.getElementById('auth-msg');
-  const btn   = document.getElementById('auth-btn');
+// ── Submit handler ────────────────────────────────────────
+function submitAuth() {
+  const email   = (document.getElementById('auth-email').value || '').trim().toLowerCase();
+  const pass    = (document.getElementById('auth-password').value || '');
+  const confirm = (document.getElementById('auth-confirm') ? document.getElementById('auth-confirm').value : '');
 
-  if(!email || !pass) {
-    msg.style.color = '#ff4d6d';
-    msg.textContent = '> please fill in all fields';
-    return;
+  // Validation
+  if (!email || !email.includes('@')) {
+    setMsg('> enter a valid email address', '#ff4d6d'); return;
   }
-  if(!sb) {
-    msg.style.color = '#ff4d6d';
-    msg.textContent = '> loading auth... try again';
-    return;
+  if (pass.length < 6) {
+    setMsg('> password must be at least 6 characters', '#ff4d6d'); return;
   }
 
-  btn.textContent = '> processing...';
-  btn.style.opacity = '.7';
-  btn.disabled = true;
-  msg.style.color = '#5a8a5a';
-  msg.textContent = '> connecting to server...';
+  setBtn('> authenticating...', true);
+  setMsg('> connecting...', '#5a8a5a');
 
-  try {
-    let result;
-    if(currentTab === 'signin') {
-      result = await sb.auth.signInWithPassword({ email, password: pass });
-    } else {
-      result = await sb.auth.signUp({ email, password: pass });
-    }
-
-    if(result.error) {
-      msg.style.color = '#ff4d6d';
-      msg.textContent = '> ' + result.error.message;
-      btn.textContent = currentTab === 'signin' ? '→ sign in' : '→ create account';
-      btn.style.opacity = '1';
-      btn.disabled = false;
-      return;
-    }
-
-    if(currentTab === 'signup' && !result.data.session) {
-      msg.style.color = '#00ff41';
-      msg.textContent = '> check your email to confirm!';
-      btn.textContent = '→ create account';
-      btn.style.opacity = '1';
-      btn.disabled = false;
-      return;
-    }
-
-    msg.style.color = '#00ff41';
-    msg.textContent = '> access granted ✓';
-    setTimeout(() => enterApp(result.data.user), 800);
-
-  } catch(e) {
-    msg.style.color = '#ff4d6d';
-    msg.textContent = '> ' + e.message;
-    btn.textContent = currentTab === 'signin' ? '→ sign in' : '→ create account';
-    btn.style.opacity = '1';
-    btn.disabled = false;
-  }
-}
-
-function enterApp(user) {
-  // Hide login page with fade
-  const lp = document.getElementById('login-page');
-  lp.style.transition = 'opacity .5s';
-  lp.style.opacity = '0';
+  // Small delay for realism
   setTimeout(() => {
-    lp.style.display = 'none';
-    document.getElementById('main-app').style.display = 'block';
+    const users = getUsers();
+
+    if (currentTab === 'signin') {
+      // ── LOGIN ──
+      if (!users[email]) {
+        setMsg('> account not found — please create one', '#ff4d6d');
+        setBtn('→ sign in', false); return;
+      }
+      if (users[email].password !== pass) {
+        setMsg('> incorrect password', '#ff4d6d');
+        setBtn('→ sign in', false); return;
+      }
+      // Success
+      setMsg('> access granted ✓', '#00ff41');
+      saveSession({ email, name: users[email].name || email.split('@')[0] });
+      setTimeout(() => enterApp({ email, name: users[email].name || email.split('@')[0] }), 600);
+
+    } else {
+      // ── SIGNUP ──
+      if (pass !== confirm) {
+        setMsg('> passwords do not match', '#ff4d6d');
+        setBtn('→ create account', false); return;
+      }
+      if (users[email]) {
+        setMsg('> account already exists — please sign in', '#ff4d6d');
+        setBtn('→ create account', false); return;
+      }
+      // Create account
+      const name = email.split('@')[0];
+      users[email] = { password: pass, name };
+      saveUsers(users);
+      saveSession({ email, name });
+      setMsg('> account created ✓ welcome!', '#00ff41');
+      setTimeout(() => enterApp({ email, name }), 600);
+    }
   }, 500);
 }
 
-// Check session on load
-window.addEventListener('load', async () => {
-  if(!sb) return;
-  const { data: { session } } = await sb.auth.getSession();
-  if(session && session.user) enterApp(session.user);
-});
-</script>
+// ── Enter the main app ────────────────────────────────────
+function enterApp(user) {
+  const lp = document.getElementById('login-page');
+  const ma = document.getElementById('main-app');
 
+  lp.style.transition = 'opacity .5s ease';
+  lp.style.opacity = '0';
+
+  setTimeout(() => {
+    lp.style.display = 'none';
+    ma.style.display = 'block';
+    window.scrollTo(0, 0);
+
+    // Update nav button to show username + logout
+    const navRight = document.querySelector('.nav-right');
+    if (navRight) {
+      // Remove old login btn if present
+      const oldBtn = navRight.querySelector('.btn-login');
+      if (oldBtn) oldBtn.remove();
+      // Add user pill
+      const pill = document.createElement('div');
+      pill.style.cssText = 'display:flex;align-items:center;gap:10px';
+      pill.innerHTML = `
+        <span style="font-family:var(--font-mono);font-size:13px;color:var(--green3)">⬡ ${user.name || user.email.split('@')[0]}</span>
+        <button onclick="logoutUser()" style="border:1px solid rgba(255,59,59,.4);color:#ff4d6d;
+          background:transparent;padding:5px 12px;font-family:var(--font-mono);font-size:11px;
+          cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(255,59,59,.1)'"
+          onmouseout="this.style.background='transparent'">logout</button>`;
+      navRight.appendChild(pill);
+    }
+
+    // Trigger backend check
+    if (typeof checkBackend === 'function') checkBackend();
+  }, 500);
+}
+
+// ── Logout ───────────────────────────────────────────────
+function logoutUser() {
+  clearSession();
+  location.reload();
+}
+
+// ── Auto-login if session exists ─────────────────────────
+(function autoLogin() {
+  const session = getSession();
+  if (session && session.email) {
+    // Show app immediately without animation
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    // Update nav
+    const navRight = document.querySelector('.nav-right');
+    if (navRight) {
+      const oldBtn = navRight.querySelector('.btn-login');
+      if (oldBtn) oldBtn.remove();
+      const pill = document.createElement('div');
+      pill.style.cssText = 'display:flex;align-items:center;gap:10px';
+      pill.innerHTML = `
+        <span style="font-family:var(--font-mono);font-size:13px;color:var(--green3)">⬡ ${session.name || session.email.split('@')[0]}</span>
+        <button onclick="logoutUser()" style="border:1px solid rgba(255,59,59,.4);color:#ff4d6d;
+          background:transparent;padding:5px 12px;font-family:var(--font-mono);font-size:11px;
+          cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(255,59,59,.1)'"
+          onmouseout="this.style.background='transparent'">logout</button>`;
+      navRight.appendChild(pill);
+    }
+  }
+  // Enter key support
+  ['auth-email','auth-password','auth-confirm'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(); });
+  });
+})();
+</script>
 </body>
 </html>
